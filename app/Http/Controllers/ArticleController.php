@@ -6,10 +6,13 @@ use App\Models\Article;
 use App\Http\Requests\StoreArticleRequest;
 use App\Http\Requests\UpdateArticleRequest;
 use App\Notifications\ArticleCreatedNotification;
+use App\Traits\ApiResponder;
 use Illuminate\Http\Request;
 
 class ArticleController extends Controller
 {
+
+    use ApiResponder;
 
     /**
      * This gets the login user articles only
@@ -18,13 +21,14 @@ class ArticleController extends Controller
     public function index(Request $request)
     {
         try {
-            $user = $request->user(); //login user
-            //$articles = Article::where("user_id", $user->id)->get(); //this fetches all the article from the database
-            $articles = $user->articles;
-            return response()->json($articles);
-        }catch (\Exception $exception) {
+            $articles = Article::query()
+                ->with("user")
+                ->where("user_id", auth()->id())
+                ->paginate(20, ["*"], "page", 1);
+            return $this->success($articles);
+        } catch (\Exception $exception) {
             logger($exception);
-            return response()->json("An error occurred", 400);
+            return $this->failed("Error occurred123");
         }
 
     }
@@ -32,32 +36,31 @@ class ArticleController extends Controller
     public function store(StoreArticleRequest $request)
     {
         try {
-            $data = $request->validated();
             $user = $request->user();
+            $data = $request->validated();
             $data["user_id"] = $user->id; //gets logged in user id
             $article = Article::create($data);
             if ($article) {
                 $user->notify(new ArticleCreatedNotification($user, $article));
             }
-            return response()->json($article);
-        }catch (\Exception $exception) {
+            return $this->success($article, "Article created");
+        } catch (\Exception $exception) {
             logger($exception);
-           return response()->json("An error occurred", 400);
+            return $this->failed("Error occurred");
         }
     }
 
 
-    public function show($id)
+    public function show(Article $article)
     {
         try {
-            $article = Article::where("id", $id)->first();
             if (empty($article)) {
-                return response()->json("Record not found with id $id", 400);
+                return $this->notFound("Record not found with id {$article->id}");
             }
-            return response()->json($article);
-        }catch (\Exception $exception) {
+            return $this->success($article, "Success");
+        } catch (\Exception $exception) {
             logger($exception);
-            return response()->json("An error occurred", 400);
+            return $this->failed("An error occurred");
         }
     }
 
@@ -73,15 +76,14 @@ class ArticleController extends Controller
         try {
             $article = Article::where("id", $id)->first();
             if (empty($article)) {
-                return response()->json("Record not found with id $id", 400);
+                return $this->notFound("Record not found with id $id", 400);
             }
 
             $article->update($data);
-
-            return response()->json($article);
-        }catch (\Exception $exception) {
+            return $this->success($article, "Article updated");
+        } catch (\Exception $exception) {
             logger($exception);
-            return response()->json("An error occurred", 400);
+            return $this->failed("An error occurred");
         }
     }
 
@@ -91,13 +93,13 @@ class ArticleController extends Controller
         try {
             $article = Article::where("id", $id)->first();
             if (empty($article)) {
-                return response()->json("Record not found with id $id", 400);
+                return $this->notFound("Record not found with id $id", 400);
             }
             $article->delete();
-            return response()->json("Article Deleted");
-        }catch (\Exception $exception) {
+            return $this->success("Article Deleted");
+        } catch (\Exception $exception) {
             logger($exception);
-            return response()->json("An error occurred", 400);
+            return $this->failed("An error occurred");
         }
     }
 }

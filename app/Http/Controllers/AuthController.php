@@ -10,11 +10,13 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $input = $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed'
-        ], [
+        ];
+
+        $input = $request->validate($rules, [
             'email.unique' => "A user already registered with " . $request->input("email")
         ]);
 

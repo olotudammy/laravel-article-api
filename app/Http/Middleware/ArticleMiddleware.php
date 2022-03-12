@@ -19,4 +19,9 @@ class ArticleMiddleware
         logger("I am the article middleware");
         return $next($request);
     }
+
+    public function terminate($request, $response)
+    {
+        logger("I have sent a response");
+    }
 }

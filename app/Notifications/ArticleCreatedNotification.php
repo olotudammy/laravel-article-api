@@ -29,7 +29,6 @@ class ArticleCreatedNotification extends Notification
      */
     public function __construct(User $user, Article $article)
     {
-
         $this->user = $user;
         $this->article = $article;
     }

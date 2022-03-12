@@ -48,4 +48,18 @@ class User extends Authenticatable
         return $this->hasMany(Article::class)
             ->orderBy("id", "desc");
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function (User $user) {
+            logger("A user was created");
+        });
+
+        static::creating(function (User $user){
+            logger("I am about to create a user");
+        });
+
+    }
 }
