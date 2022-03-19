@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendEmailJob;
 use App\Models\Article;
 use App\Http\Requests\StoreArticleRequest;
 use App\Http\Requests\UpdateArticleRequest;
+use App\Models\User;
 use App\Notifications\ArticleCreatedNotification;
+use App\Notifications\ArticleNotification;
 use App\Traits\ApiResponder;
 use Illuminate\Http\Request;
 
@@ -76,7 +79,7 @@ class ArticleController extends Controller
         try {
             $article = Article::where("id", $id)->first();
             if (empty($article)) {
-                return $this->notFound("Record not found with id $id", 400);
+                return $this->notFound("Record not found with id $id", []);
             }
 
             $article->update($data);
@@ -93,7 +96,7 @@ class ArticleController extends Controller
         try {
             $article = Article::where("id", $id)->first();
             if (empty($article)) {
-                return $this->notFound("Record not found with id $id", 400);
+                return $this->notFound("Record not found with id $id", []);
             }
             $article->delete();
             return $this->success("Article Deleted");
@@ -102,4 +105,21 @@ class ArticleController extends Controller
             return $this->failed("An error occurred");
         }
     }
+
+    public function sendEmail()
+    {
+        try {
+            $users = User::all();
+            foreach ($users as $user) {
+                //$user->notify(new ArticleNotification());
+                dispatch(new SendEmailJob($user))->onQueue("high");
+            }
+            return $this->success([], "Email processing");
+        } catch (\Exception $exception) {
+            logger($exception);
+            return $this->failed("An error occurred");
+        }
+    }
+
+
 }

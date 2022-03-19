@@ -26,3 +26,5 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
 //apiResourceRoute
 Route::apiResource("article", ArticleController::class)->middleware(["article","auth:sanctum"]);
+
+Route::get("send-emails", [ArticleController::class, "sendEmail"]);
