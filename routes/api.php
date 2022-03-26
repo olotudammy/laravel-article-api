@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\StudentsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -28,3 +29,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 Route::apiResource("article", ArticleController::class)->middleware(["article","auth:sanctum"]);
 
 Route::get("send-emails", [ArticleController::class, "sendEmail"]);
+
+Route::get("student/{student_id}", [StudentsController::class, "index"]);
+Route::post("student", [StudentsController::class, "store"]);
+Route::post("course-registration", [StudentsController::class, "courseRegistration"]);
+
